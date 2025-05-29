@@ -13,18 +13,23 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 # File upload configuration
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.abspath('uploads')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi', 'mov', 'mp3', 'wav', 'ogg', 'webm', 'm4a', 'aac', 'flac', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
-# Create upload directories
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'images'), exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'videos'), exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'audio'), exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'documents'), exist_ok=True)
+# Create upload directories and verify permissions
+for folder_dir in ['images', 'videos', 'audio', 'documents']:
+    folder_path = os.path.join(UPLOAD_FOLDER, folder_dir)
+    try:
+        os.makedirs(folder_path, exist_ok=True)
+        if not os.access(folder_path, os.W_OK):
+            raise PermissionError(f"Directory {folder_path} is not writable")
+    except Exception as e:
+        print(f"Error creating folder {folder_path}: {e}")
+        continue
 
 # MongoDB connection
 try:
@@ -126,8 +131,8 @@ def save_uploaded_file(file):
 
         return {
             'original_name': original_filename,
-            'filename': unique_filename,
-            'file_path': file_path,
+            'filename': unique_filename,  # Use just the unique filename
+            'file_path': os.path.join(folder, unique_filename),
             'file_type': file_type,
             'file_size': file_size,
             'folder': folder
@@ -788,14 +793,31 @@ def upload_voice():
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    """Serve uploaded files"""
+    """Serve uploaded files with proper path handling and download support"""
     try:
-        # Find the file in subdirectories
+        # Construct the full path to search for the file
         for folder in ['images', 'videos', 'audio', 'documents']:
-            file_path = os.path.join(UPLOAD_FOLDER, folder, filename)
+            file_dir = os.path.join(UPLOAD_FOLDER, folder)
+            file_path = os.path.join(file_dir, filename)
+            
             if os.path.exists(file_path):
-                return send_file(file_path)
+                # Get MIME type based on file extension
+                content_type, _ = mimetypes.guess_type(file_path)
+                
+                # Handle PDFs: force download instead of preview
+                if filename.lower().endswith('.pdf'):
+                    return send_file(
+                        file_path,
+                        mimetype='application/pdf',
+                        as_attachment=True,
+                        download_name=filename
+                    )
+                
+                # Return the file with appropriate content type
+                return send_file(file_path, mimetype=content_type)
 
+        # If we get here, the file wasn't found
+        print(f"File not found: {filename}")
         return jsonify({'error': 'File not found'}), 404
     except Exception as e:
         print(f"Error serving file: {e}")
