@@ -202,27 +202,39 @@
                         {% if message.sender.id == user.user_id %}
                             <!-- Sent Message -->
                             <div class="flex items-start space-x-3 justify-end">
-                                <div class="max-w-xs lg:max-w-md">
+                                <div class="max-w-xs lg:max-w-md group" data-message-id="{{ message.id }}">
                                     {% if message.message_type == 'text' %}
-                                        <div class="message-sent rounded-2xl rounded-tr-md p-3">
+                                        <div class="message-sent rounded-2xl rounded-tr-md p-3 relative">
                                             <p class="text-white">{{ message.content }}</p>
+                                            <button onclick="confirmDeleteMessage('{{ message.id }}')" 
+                                                    class="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
                                         </div>
                                     {% elif message.message_type == 'image' %}
-                                        <div class="message-sent rounded-2xl rounded-tr-md p-1">
+                                        <div class="message-sent rounded-2xl rounded-tr-md p-1 relative">
                                             <img src="{{ url_for('uploaded_file', filename=message.file_name) }}"
                                                  alt="{{ message.original_name }}"
                                                  class="w-full max-w-xs rounded-xl object-cover cursor-pointer"
                                                  onclick="openImageModal('{{ url_for('uploaded_file', filename=message.file_name) }}', '{{ message.original_name }}')">
+                                            <button onclick="confirmDeleteMessage('{{ message.id }}')" 
+                                                    class="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
                                         </div>
                                     {% elif message.message_type == 'video' %}
-                                        <div class="message-sent rounded-2xl rounded-tr-md p-1">
+                                        <div class="message-sent rounded-2xl rounded-tr-md p-1 relative">
                                             <video controls class="w-full max-w-xs rounded-xl">
                                                 <source src="{{ url_for('uploaded_file', filename=message.file_name) }}" type="video/mp4">
                                                 Your browser does not support the video tag.
                                             </video>
+                                            <button onclick="confirmDeleteMessage('{{ message.id }}')" 
+                                                    class="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
                                         </div>
                                     {% elif message.message_type == 'audio' %}
-                                        <div class="message-sent rounded-2xl rounded-tr-md p-3 flex items-center space-x-3">
+                                        <div class="message-sent rounded-2xl rounded-tr-md p-3 flex items-center space-x-3 relative">
                                             <button onclick="toggleAudio('{{ message.id }}')" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700 transition duration-300">
                                                 <i class="fas fa-play text-white text-sm" id="play-icon-{{ message.id }}"></i>
                                             </button>
@@ -237,10 +249,13 @@
                                                     <source src="{{ url_for('uploaded_file', filename=message.file_name) }}" type="audio/mpeg">
                                                 </audio>
                                             </div>
+                                            <button onclick="confirmDeleteMessage('{{ message.id }}')" 
+                                                    class="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
                                         </div>
                                     {% else %}
-                                        <!-- File Message -->
-                                        <div class="message-sent rounded-2xl rounded-tr-md p-3">
+                                        <div class="message-sent rounded-2xl rounded-tr-md p-3 relative">
                                             <div class="flex items-center space-x-3">
                                                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                                                     <i class="fas fa-file text-white text-sm"></i>
@@ -253,6 +268,10 @@
                                                     <i class="fas fa-download"></i>
                                                 </a>
                                             </div>
+                                            <button onclick="confirmDeleteMessage('{{ message.id }}')" 
+                                                    class="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
                                         </div>
                                     {% endif %}
                                     <p class="text-gray-400 text-xs mt-1 mr-3 text-right">
@@ -356,24 +375,9 @@
             <!-- Message Input -->
             <div class="glass-effect p-4 border-t border-purple-500/20">
                 <div class="flex items-end space-x-3">
-                    <!-- Attachment Button -->
-                    <button onclick="toggleAttachmentMenu()" class="text-gray-400 hover:text-white p-2 transition duration-300 relative">
-                        <i class="fas fa-paperclip"></i>
-                        <!-- Attachment Menu -->
-                        <div id="attachmentMenu" class="absolute bottom-full left-0 mb-2 glass-effect rounded-lg p-2 space-y-2 hidden">
-                            <button onclick="selectFile()" class="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg w-full text-left">
-                                <i class="fas fa-file text-blue-400"></i>
-                                <span class="text-white text-sm">File</span>
-                            </button>
-                            <button onclick="selectImage()" class="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg w-full text-left">
-                                <i class="fas fa-image text-green-400"></i>
-                                <span class="text-white text-sm">Image</span>
-                            </button>
-                            <button onclick="selectVideo()" class="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg w-full text-left">
-                                <i class="fas fa-video text-red-400"></i>
-                                <span class="text-white text-sm">Video</span>
-                            </button>
-                        </div>
+                    <!-- Image Upload Button -->
+                    <button onclick="selectImage()" class="text-gray-400 hover:text-white p-2 transition duration-300">
+                        <i class="fas fa-image"></i>
                     </button>
 
                     <!-- Message Input -->
@@ -425,31 +429,8 @@
         </div>
     </div>
 
-    <!-- File Upload Modal -->
-    <div id="fileUploadModal" class="fixed inset-0 modal z-50 flex items-center justify-center hidden">
-        <div class="glass-effect p-6 rounded-2xl max-w-md w-full mx-4">
-            <h3 class="text-white font-bold text-xl mb-4">Upload File</h3>
-            <div class="file-drop-zone border-2 border-dashed border-purple-500/50 rounded-lg p-8 text-center">
-                <i class="fas fa-cloud-upload-alt text-4xl text-purple-400 mb-4"></i>
-                <p class="text-white mb-2">Drag & drop your file here</p>
-                <p class="text-gray-400 text-sm">or click to browse</p>
-                <input type="file" id="fileInput" class="hidden" multiple>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button onclick="closeFileModal()" class="px-4 py-2 text-gray-300 hover:text-white transition duration-300">
-                    Cancel
-                </button>
-                <button onclick="uploadFiles()" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition duration-300">
-                    Upload
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden file inputs -->
-    <input type="file" id="hiddenFileInput" style="display: none;" multiple>
+    <!-- Hidden image input -->
     <input type="file" id="hiddenImageInput" style="display: none;" accept="image/*" multiple>
-    <input type="file" id="hiddenVideoInput" style="display: none;" accept="video/*" multiple>
 
     <script>
         let isRecording = false;
@@ -520,27 +501,104 @@
             const messagesContainer = document.getElementById('messagesContainer');
             const messageDiv = document.createElement('div');
 
-            if (isSent) {
-                messageDiv.className = 'flex items-start space-x-3 justify-end';
-                messageDiv.innerHTML = `
-                    <div class="max-w-xs lg:max-w-md">
-                        <div class="message-sent rounded-2xl rounded-tr-md p-3">
-                            <p class="text-white">${escapeHtml(message.content)}</p>
+            const alignmentClass = isSent ? 'justify-end' : '';
+            const messageClass = isSent ? 'message-sent rounded-tr-md' : 'message-received rounded-tl-md';
+            const timeClass = isSent ? 'mr-3 text-right' : 'ml-3';
+
+            messageDiv.className = `flex items-start space-x-3 ${alignmentClass}`;
+            messageDiv.setAttribute('data-message-id', message.id);
+
+            const deleteButton = isSent ? `
+                <button onclick="confirmDeleteMessage('${message.id}')" 
+                        class="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            ` : '';
+
+            let messageContent = '';
+
+            if (message.message_type === 'image') {
+                messageContent = `
+                    <div class="${messageClass} rounded-2xl p-1 relative">
+                        <img src="/uploads/${message.file_name}"
+                             alt="${message.original_name}"
+                             class="w-full max-w-xs rounded-xl object-cover cursor-pointer"
+                             onclick="openImageModal('/uploads/${message.file_name}', '${message.original_name}')">
+                        ${deleteButton}
+                    </div>
+                `;
+            } else if (message.message_type === 'video') {
+                messageContent = `
+                    <div class="${messageClass} rounded-2xl p-1 relative">
+                        <video controls class="w-full max-w-xs rounded-xl">
+                            <source src="/uploads/${message.file_name}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        ${deleteButton}
+                    </div>
+                `;
+            } else if (message.message_type === 'audio') {
+                messageContent = `
+                    <div class="${messageClass} rounded-2xl p-3 flex items-center space-x-3 relative">
+                        <button onclick="toggleAudio('${message.id}')" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700 transition duration-300">
+                            <i class="fas fa-play text-white text-sm" id="play-icon-${message.id}"></i>
+                        </button>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2">
+                                <div class="flex-1 h-1 bg-gray-600 rounded-full">
+                                    <div class="w-0 h-full bg-purple-500 rounded-full" id="progress-${message.id}"></div>
+                                </div>
+                                <span class="text-gray-300 text-xs" id="duration-${message.id}">0:00</span>
+                            </div>
+                            <audio id="audio-${message.id}" preload="metadata">
+                                <source src="/uploads/${message.file_name}" type="audio/mpeg">
+                            </audio>
                         </div>
-                        <p class="text-gray-400 text-xs mt-1 mr-3 text-right">${formatTime(new Date())} ✓</p>
+                        ${deleteButton}
+                    </div>
+                `;
+            } else if (message.message_type === 'file') {
+                messageContent = `
+                    <div class="${messageClass} rounded-2xl p-3 relative">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file text-white text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white text-sm truncate">${message.original_name}</p>
+                                <p class="text-purple-200 text-xs">${(message.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                            <a href="/uploads/${message.file_name}" download="${message.original_name}" class="text-white hover:text-purple-200">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        ${deleteButton}
                     </div>
                 `;
             } else {
-                messageDiv.className = 'flex items-start space-x-3';
+                messageContent = `
+                    <div class="${messageClass} rounded-2xl p-3 relative">
+                        <p class="text-white">${escapeHtml(message.content)}</p>
+                        ${deleteButton}
+                    </div>
+                `;
+            }
+
+            if (!isSent) {
                 messageDiv.innerHTML = `
                     <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                         <span class="text-white font-semibold text-xs">${message.sender.name[0].toUpperCase()}</span>
                     </div>
                     <div class="max-w-xs lg:max-w-md">
-                        <div class="message-received rounded-2xl rounded-tl-md p-3">
-                            <p class="text-white">${escapeHtml(message.content)}</p>
-                        </div>
-                        <p class="text-gray-400 text-xs mt-1 ml-3">${formatTime(new Date())}</p>
+                        ${messageContent}
+                        <p class="text-gray-400 text-xs mt-1 ${timeClass}">${formatTime(new Date())}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="max-w-xs lg:max-w-md">
+                        ${messageContent}
+                        <p class="text-gray-400 text-xs mt-1 ${timeClass}">${formatTime(new Date())} ✓</p>
                     </div>
                 `;
             }
@@ -587,21 +645,8 @@
             input.value += emoji;
             input.focus();
             toggleEmojiPicker();
-        }
-
-        function selectFile() {
-            document.getElementById('hiddenFileInput').click();
-            toggleAttachmentMenu();
-        }
-
-        function selectImage() {
+        }        function selectImage() {
             document.getElementById('hiddenImageInput').click();
-            toggleAttachmentMenu();
-        }
-
-        function selectVideo() {
-            document.getElementById('hiddenVideoInput').click();
-            toggleAttachmentMenu();
         }
 
         // Toggle voice recording function
@@ -615,30 +660,24 @@
 
         function closeFileModal() {
             document.getElementById('fileUploadModal').classList.add('hidden');
-        }
-
-        // File input handlers
-        document.getElementById('hiddenFileInput').addEventListener('change', function(e) {
-            handleFileUpload(e.target.files);
-        });
-
+        }        // Image input handler
         document.getElementById('hiddenImageInput').addEventListener('change', function(e) {
-            handleFileUpload(e.target.files);
+            handleImageUpload(e.target.files);
         });
 
-        document.getElementById('hiddenVideoInput').addEventListener('change', function(e) {
-            handleFileUpload(e.target.files);
-        });
-
-        function handleFileUpload(files) {
+        function handleImageUpload(files) {
             if (files.length > 0) {
                 Array.from(files).forEach(file => {
-                    uploadFile(file);
+                    if (file.type.startsWith('image/')) {
+                        uploadImage(file);
+                    } else {
+                        console.warn('Skipping non-image file:', file.name);
+                    }
                 });
             }
         }
 
-        function uploadFile(file) {
+        function uploadImage(file) {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('conversation_id', '{{ conversation_id }}');
@@ -693,6 +732,7 @@
             const timeClass = isSent ? 'mr-3 text-right' : 'ml-3';
 
             messageDiv.className = `flex items-start space-x-3 ${alignmentClass}`;
+            messageDiv.setAttribute('data-message-id', message.id);
 
             let messageContent = '';
 
@@ -773,33 +813,7 @@
 
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function getFileIcon(fileType) {
-            if (fileType.includes('pdf')) {
-                return { icon: 'fas fa-file-pdf', color: 'bg-red-500' };
-            } else if (fileType.includes('word')) {
-                return { icon: 'fas fa-file-word', color: 'bg-blue-500' };
-            } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
-                return { icon: 'fas fa-file-excel', color: 'bg-green-500' };
-            } else if (fileType.includes('video')) {
-                return { icon: 'fas fa-file-video', color: 'bg-purple-500' };
-            } else if (fileType.includes('audio')) {
-                return { icon: 'fas fa-file-audio', color: 'bg-orange-500' };
-            } else {
-                return { icon: 'fas fa-file', color: 'bg-gray-500' };
-            }
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Close dropdowns when clicking outside
+        }        // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('#attachmentMenu') && !e.target.closest('button[onclick="toggleAttachmentMenu()"]')) {
                 attachmentMenuOpen = false;
@@ -825,16 +839,14 @@
             e.preventDefault();
             e.stopPropagation();
             this.classList.remove('dragover');
-        });
-
-        chatArea.addEventListener('drop', function(e) {
+        });        chatArea.addEventListener('drop', function(e) {
             e.preventDefault();
             e.stopPropagation();
             this.classList.remove('dragover');
 
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                handleFileSelection(files);
+                handleImageUpload(files);
             }
         });
 
@@ -1045,20 +1057,37 @@
         function openImageModal(imageSrc, imageName) {
             // Create modal
             const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50';
+            
+            // Calculate maximum size based on viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const maxWidth = Math.min(viewportWidth * 0.9, 1200); // 90% of viewport width up to 1200px
+            const maxHeight = viewportHeight * 0.9; // 90% of viewport height
+            
             modal.innerHTML = `
-                <div class="max-w-4xl max-h-full p-4">
-                    <div class="relative">
-                        <img src="${imageSrc}" alt="${imageName}" class="max-w-full max-h-full object-contain">
-                        <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-75">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <div class="absolute bottom-4 left-4 text-white bg-black bg-opacity-50 px-3 py-1 rounded">
-                            ${imageName}
-                        </div>
+                <div class="relative" style="max-width: ${maxWidth}px; max-height: ${maxHeight}px;">
+                    <img src="${imageSrc}" 
+                         alt="${imageName}" 
+                         class="rounded-lg shadow-2xl object-contain"
+                         style="max-width: 100%; max-height: ${maxHeight}px; min-height: 200px;">
+                    <button onclick="this.closest('.fixed').remove()" 
+                            class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-75 transition duration-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="absolute bottom-4 left-4 text-white bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                        <p class="text-sm font-medium">${imageName}</p>
                     </div>
                 </div>
             `;
+            
+            // Add click anywhere to close
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
             document.body.appendChild(modal);
         }
 
@@ -1104,7 +1133,101 @@
             alert('Show all media functionality - to be implemented');
         }
 
-        // Scroll to bottom on page load
+        // Delete message functionality
+        function confirmDeleteMessage(messageId) {
+            // Create a custom modal for deletion confirmation
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="glass-effect p-6 rounded-xl max-w-sm w-full mx-4">
+                    <h3 class="text-white font-bold text-lg mb-4">Delete Message</h3>
+                    <p class="text-gray-300 mb-6">Are you sure you want to delete this message? This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="px-4 py-2 text-gray-300 hover:text-white transition duration-300">
+                            Cancel
+                        </button>
+                        <button onclick="deleteMessage('${messageId}', this)" 
+                                class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }        function deleteMessage(messageId, button) {
+            if (button) {
+                const originalText = button.textContent;
+                button.textContent = 'Deleting...';
+                button.disabled = true;
+            }
+
+            fetch('{{ url_for("delete_message") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message_id: messageId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const messageContainer = document.querySelector(`[data-message-id="${messageId}"]`).closest('.flex.items-start.space-x-3');
+                    
+                    if (messageContainer) {
+                        // Fade out animation
+                        messageContainer.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        messageContainer.style.opacity = '0';
+                        messageContainer.style.transform = 'translateX(20px)';
+                        
+                        setTimeout(() => {
+                            messageContainer.remove();
+                            
+                            // Check if this was the last message
+                            if (document.querySelectorAll('.flex.items-start.space-x-3').length === 0) {
+                                // Show the "no messages" state
+                                const noMessages = document.createElement('div');
+                                noMessages.className = 'text-center py-8';
+                                noMessages.innerHTML = `
+                                    <div class="w-16 h-16 bg-purple-600/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                        <i class="fas fa-comments text-purple-400 text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white font-semibold mb-2">No messages yet</h3>
+                                    <p class="text-gray-400 text-sm">Start the conversation by sending a message below</p>
+                                `;
+                                document.getElementById('messagesContainer').appendChild(noMessages);
+                            }
+                        }, 300);
+                    }
+                    
+                    // Remove the confirmation modal
+                    const modal = document.querySelector('.fixed.inset-0');
+                    if (modal) {
+                        modal.style.opacity = '0';
+                        setTimeout(() => modal.remove(), 300);
+                    }
+                } else {
+                    console.error('Failed to delete message:', data.error);
+                    const error = data.error || 'Please try again.';
+                    alert('Failed to delete message: ' + error);
+                    if (button) {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting message:', error);
+                alert('Error deleting message. Please try again.');
+                if (button) {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            });
+        }
+
         window.addEventListener('load', function() {
             const messagesContainer = document.getElementById('messagesContainer');
             messagesContainer.scrollTop = messagesContainer.scrollHeight;

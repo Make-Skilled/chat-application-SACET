@@ -842,6 +842,79 @@ def get_media(conversation_id):
         print(f"Error getting media: {e}")
         return jsonify({'success': False, 'error': 'Failed to get media'}), 500
 
+@app.route('/api/delete_message', methods=['POST'])
+def delete_message():
+    """Delete a message from a conversation"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+
+    try:
+        data = request.get_json()
+        message_id = data.get('message_id')
+        
+        if not message_id:
+            return jsonify({'success': False, 'error': 'Message ID is required'}), 400
+
+        # Find the message
+        message = messages.find_one({'_id': ObjectId(message_id)})
+        if not message:
+            return jsonify({'success': False, 'error': 'Message not found'}), 404
+
+        # Verify user owns the message
+        if str(message['sender_id']) != session['user_id']:
+            return jsonify({'success': False, 'error': 'Cannot delete messages from other users'}), 403
+
+        # Delete any associated files if it's a media message
+        if message.get('message_type') in ['image', 'video', 'audio', 'file'] and message.get('file_path'):
+            try:
+                file_path = message['file_path']
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Error deleting file: {e}")
+
+        # Delete the message
+        result = messages.delete_one({'_id': ObjectId(message_id)})
+        
+        if result.deleted_count > 0:
+            # Update last message in conversation if this was the last message
+            conversation = conversations.find_one({'_id': message['conversation_id']})
+            if str(conversation.get('last_message', '')) == str(message.get('content', '')):
+                # Get the new last message
+                last_message = messages.find_one(
+                    {'conversation_id': message['conversation_id']},
+                    sort=[('timestamp', -1)]
+                )
+                
+                if last_message:
+                    conversations.update_one(
+                        {'_id': message['conversation_id']},
+                        {
+                            '$set': {
+                                'last_message': last_message['content'],
+                                'last_message_time': last_message['timestamp']
+                            }
+                        }
+                    )
+                else:
+                    conversations.update_one(
+                        {'_id': message['conversation_id']},
+                        {
+                            '$set': {
+                                'last_message': '',
+                                'last_message_time': datetime.now(timezone.utc)
+                            }
+                        }
+                    )
+                    
+            return jsonify({'success': True})
+            
+        return jsonify({'success': False, 'error': 'Failed to delete message'}), 500
+
+    except Exception as e:
+        print(f"Error deleting message: {e}")
+        return jsonify({'success': False, 'error': 'Failed to delete message'}), 500
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
